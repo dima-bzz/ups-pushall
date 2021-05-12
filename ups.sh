@@ -56,7 +56,7 @@ check() {
 
 	if [ -z "$TEST" ]; then
 		# shellcheck disable=SC2002
-		UPSNAME=$(cat "${FILE}" | awk '/^(UPSNAME).*:/ {$1=$2="";print $0}' | tr -d '[:space:]')
+		UPSNAME=$(cat "${FILE}" | awk '/^(UPSNAME).*:/ {$1=$2="";print $0}' | sed -e 's/^[[:space:]]*//')
 		# shellcheck disable=SC2002
 		STATUS=$(cat "${FILE}" | awk '/^(STATUS).*:/ {print $3}')
 		# shellcheck disable=SC2002
