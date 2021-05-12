@@ -1,6 +1,7 @@
 #!/bin/bash
 
-CONF="ups.conf"
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+CONF="${DIR}/ups.conf"
 TEST="$1"
 CACHE_STATUS=''
 
@@ -39,11 +40,10 @@ fi
 push() {
 	local -r status="$1"
 	local -r bcharge="$2"
-	local -r upsname="$3"
+	local -r upsname="${3:-UPS}"
 
-	TITLE="Status ${upsname:-UPS}"
-
-	TEXT="Status UPC: ${status} Battery Charge: ${bcharge}%"
+	TITLE="${TITLE//#upsname/$upsname}"
+  TEXT=$(echo "${TEXT}" | sed "s/#status/${status}/; s/#bcharge/${bcharge}/; s/#upsname/${upsname}/;")
 
 	curl -sd "type=${TYPE}&id=${ID}&key=${KEY}&ttl=${TTL}&uid=${UIDD}&uids=${UIDS}&title=${TITLE}&text=${TEXT}" https://pushall.ru/api.php 	
 }
@@ -71,7 +71,7 @@ check() {
 	fi
 
 	if [ -z "$STATUS" ]; then
-		echo "UPC Status not found"
+		echo "UPS Status not found"
 		exit 1
 	fi
 
