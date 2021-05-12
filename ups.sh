@@ -29,8 +29,8 @@ if [ "$TYPE" = "multicast" ] && [ -z "$UIDS" ]; then
 fi
 
 if [ "$TYPE" = "unicast" ] && [ -z "$UIDD" ]; then
-        echo "You are using unicast request type. UIDD must be set"
-        exit 1
+				echo "You are using unicast request type. UIDD must be set"
+				exit 1
 fi
 
 if [ -n "$TEST" ]; then
@@ -44,16 +44,16 @@ push() {
 
 	# shellcheck disable=SC2153
 	RTITLE="${TITLE//#upsname/$upsname}"
-  # shellcheck disable=SC2153
-  RTEXT=$(echo "${TEXT}" | sed "s/#status/${status}/; s/#bcharge/${bcharge}/; s/#upsname/${upsname}/;")
+	# shellcheck disable=SC2153
+	RTEXT=$(echo "${TEXT}" | sed "s/#status/${status}/; s/#bcharge/${bcharge}/; s/#upsname/${upsname}/;")
 
-  if [ -z "$RTITLE" ]; then
-    RTITLE="Status ${upsname}"
-  fi
+	if [ -z "$RTITLE" ]; then
+		RTITLE="Status ${upsname}"
+	fi
 
-  if [ -z "$RTEXT" ]; then
-    RTEXT="Status UPS: ${status} Battery Charge: ${bcharge}%"
-  fi
+	if [ -z "$RTEXT" ]; then
+		RTEXT="Status UPS: ${status} Battery Charge: ${bcharge}%"
+	fi
 
 	curl -sd "type=${TYPE}&id=${ID}&key=${KEY}&ttl=${TTL}&uid=${UIDD}&uids=${UIDS}&title=${RTITLE}&text=${RTEXT}" https://pushall.ru/api.php
 }
@@ -99,8 +99,8 @@ do
 
 	if [ -n "$TEST" ]; then
 		echo -e
-    exit 0
-  fi
+		exit 0
+	fi
 
 	sleep "${INTERVAL:-15}"
 done
