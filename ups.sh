@@ -42,10 +42,20 @@ push() {
 	local -r bcharge="$2"
 	local -r upsname="${3:-UPS}"
 
-	TITLE="${TITLE//#upsname/$upsname}"
-  TEXT=$(echo "${TEXT}" | sed "s/#status/${status}/; s/#bcharge/${bcharge}/; s/#upsname/${upsname}/;")
+	# shellcheck disable=SC2153
+	RTITLE="${TITLE//#upsname/$upsname}"
+  # shellcheck disable=SC2153
+  RTEXT=$(echo "${TEXT}" | sed "s/#status/${status}/; s/#bcharge/${bcharge}/; s/#upsname/${upsname}/;")
 
-	curl -sd "type=${TYPE}&id=${ID}&key=${KEY}&ttl=${TTL}&uid=${UIDD}&uids=${UIDS}&title=${TITLE}&text=${TEXT}" https://pushall.ru/api.php 	
+  if [ -z "$RTITLE" ]; then
+    RTITLE="Status ${upsname}"
+  fi
+
+  if [ -z "$RTEXT" ]; then
+    RTEXT="Status UPS: ${status} Battery Charge: ${bcharge}%"
+  fi
+
+	curl -sd "type=${TYPE}&id=${ID}&key=${KEY}&ttl=${TTL}&uid=${UIDD}&uids=${UIDS}&title=${RTITLE}&text=${RTEXT}" https://pushall.ru/api.php
 }
 
 check() {
@@ -79,7 +89,6 @@ check() {
 		if [ -z "$TEST" ]; then
 			CACHE_STATUS="${STATUS}"
 		fi
-
 		push "${STATUS}" "${BCHARGE}" "${UPSNAME}"
 	fi
 }
@@ -93,5 +102,5 @@ do
     exit 0
   fi
 
-	sleep 15s
+	sleep "${INTERVAL:-15}"
 done
