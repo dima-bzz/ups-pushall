@@ -13,6 +13,7 @@ if [ ! -f "$CONF" ]; then
 	echo "File configuration not found. Please copy ups.example.conf to ups.conf"
 	exit 1
 else
+	# shellcheck disable=SC1090
 	source "${CONF}"
 fi
 
@@ -54,15 +55,18 @@ check() {
 	fi
 
 	if [ -z "$TEST" ]; then
-		UPSNAME=$(cat "${FILE}" | awk '/^(UPSNAME).*:/ {print $3}')
+		# shellcheck disable=SC2002
+		UPSNAME=$(cat "${FILE}" | awk '/^(UPSNAME).*:/ {$1=$2="";print $0}' | tr -d '[:space:]')
+		# shellcheck disable=SC2002
 		STATUS=$(cat "${FILE}" | awk '/^(STATUS).*:/ {print $3}')
+		# shellcheck disable=SC2002
 		BCHARGE=$(cat "${FILE}" | awk '/^(BCHARGE).*:/ {print $3}')
 	else
 		UPSNAME=""
 		array=("ONLINE" "ONBATT")
-		BCHARGE=$[ ( $RANDOM % 100 )  + 1 ]
+		BCHARGE=$(( (RANDOM % 100 )  + 1 ))
 		size="${#array[@]}"
-		index=$(($RANDOM % $size))
+		index=$((RANDOM % size))
 		STATUS="${array[$index]}"
 	fi
 
@@ -86,8 +90,8 @@ do
 
 	if [ -n "$TEST" ]; then
 		echo -e
-                exit 0
-        fi
+    exit 0
+  fi
 
 	sleep 15s
 done
