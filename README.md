@@ -1,4 +1,4 @@
-# UPS Pushall Notification
+# UPS PushAll Notification
 
 Sending notifications when UPS status changes
 
@@ -19,7 +19,22 @@ Sending notifications when UPS status changes
 (/path/to/ups.sh &> /var/log/ups.log) &
 ```
 
+**Example of config file**
+```
+TYPE="self" // request types (self, broadcast, multicast, unicast). Required
+ID=1234 // channel or account id. Required
+KEY="676a0e64bdc0befcab35376984d95790" // channel or account key. Required
+TTL=86400 // lifetime in seconds. Default 86400 - day
+UIDD=1234 // user id for unicast request. Required only if using unicast request
+UIDS="[1234,1235,1237]" // users id for multicast request. Required only if using multicast request
+FILE="/var/log/apcupsd.status" // location of status file apcupsd. Required
+TITLE="Status #upsname" // Push notification title
+TEXT="Status UPS: #status Battery Charge: #bcharge% Time Left: #timeleft" // Push notification text
+INTERVAL=15 // polling interval. Default 15 seconds
+BATT_INTERVAL=0 // polling interval on battery power. Default disable
+```
+
 **Documentation**
 
-[Full documentation](https://pushall.ru/blog/api)
+[Full documentation PushAll](https://pushall.ru/blog/api)
 
