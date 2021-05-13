@@ -24,6 +24,11 @@ if [ -z "$TYPE" ] || [ -z "$ID" ] || [ -z "$KEY" ] || [ -z "$FILE" ]; then
   exit 1
 fi
 
+if [ -z "$TEST" ] && [ ! -f "$FILE" ]; then
+  echo "File ${FILE} not found"
+  exit 1
+fi
+
 if [ "$TYPE" = "multicast" ] && [ -z "$UIDS" ]; then
   echo "You are using multicast request type. UIDS must be set"
   exit 1
@@ -56,11 +61,6 @@ push() {
 }
 
 check() {
-  if [ -z "$TEST" ] && [ ! -f "$FILE" ]; then
-    echo "File ${FILE} not found"
-    exit 1
-  fi
-
   if [ -z "$TEST" ]; then
     # shellcheck disable=SC2002
     UPSNAME=$(cat "${FILE}" | awk '/^(UPSNAME).*:/ {$1=$2="";print $0}' | sed -e 's/^[[:space:]]*//')
@@ -83,7 +83,7 @@ check() {
 
   if [ -z "$STATUS" ]; then
     echo "UPS Status not found in ${FILE}"
-    exit 1
+    return
   fi
 
   if [ "$CACHE_STATUS" != "$STATUS" ]; then
@@ -98,7 +98,7 @@ check() {
   fi
 }
 
-echo "Running success ${NOW}"
+echo "Service started successfully ${NOW}"
 
 while :
 do
