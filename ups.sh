@@ -26,9 +26,7 @@ fi
 if [ "$TYPE" = "multicast" ] && [ -z "$UIDS" ]; then
   echo "You are using multicast request type. UIDS must be set"
   exit 1
-fi
-
-if [ "$TYPE" = "unicast" ] && [ -z "$UIDD" ]; then
+elif [ "$TYPE" = "unicast" ] && [ -z "$UIDD" ]; then
   echo "You are using unicast request type. UIDD must be set"
   exit 1
 fi
@@ -87,7 +85,7 @@ check() {
   fi
 
   if [ -z "$STATUS" ]; then
-    echo "UPS Status not found"
+    echo "UPS Status not found in ${FILE}"
     exit 1
   fi
 
