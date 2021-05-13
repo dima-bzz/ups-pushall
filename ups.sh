@@ -4,6 +4,7 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 CONF="${DIR}/ups.conf"
 TEST="$1"
 CACHE_STATUS=''
+NOW=$(date)
 
 if ! which apcupsd &> /dev/null; then
   echo "apcupsd not installed"
@@ -31,10 +32,6 @@ elif [ "$TYPE" = "unicast" ] && [ -z "$UIDD" ]; then
   exit 1
 fi
 
-if [ -n "$TEST" ]; then
-  echo "Running test"
-fi
-
 push() {
   local -r status="$1"
   local -r bcharge="$2"
@@ -55,7 +52,7 @@ push() {
   fi
 
   RUN=$(curl -sd "type=${TYPE}&id=${ID}&key=${KEY}&ttl=${TTL}&uid=${UIDD}&uids=${UIDS}&title=${RTITLE}&text=${RTEXT}" https://pushall.ru/api.php)
-  echo -e "${RUN}"
+  echo -e "Message sending result: ${RUN}"
 }
 
 check() {
@@ -100,6 +97,8 @@ check() {
     fi
   fi
 }
+
+echo "Running success ${NOW}"
 
 while :
 do
