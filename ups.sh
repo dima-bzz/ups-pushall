@@ -34,28 +34,30 @@ if [ "$TYPE" = "unicast" ] && [ -z "$UIDD" ]; then
 fi
 
 if [ -n "$TEST" ]; then
-  echo -e "Running test"
+  echo "Running test"
 fi
 
 push() {
   local -r status="$1"
   local -r bcharge="$2"
   local -r upsname="${3:-UPS}"
+  local -r timeleft="$4"
 
   # shellcheck disable=SC2153
   RTITLE="${TITLE//#upsname/$upsname}"
   # shellcheck disable=SC2153
-  RTEXT=$(echo "${TEXT}" | sed "s/#status/${status}/; s/#bcharge/${bcharge}/; s/#upsname/${upsname}/;")
+  RTEXT=$(echo "${TEXT}" | sed "s/#status/${status}/; s/#bcharge/${bcharge}/; s/#upsname/${upsname}/; s/#timeleft/${timeleft}/;")
 
   if [ -z "$RTITLE" ]; then
     RTITLE="Status ${upsname}"
   fi
 
   if [ -z "$RTEXT" ]; then
-    RTEXT="Status UPS: ${status} Battery Charge: ${bcharge}%"
+    RTEXT="Status UPS: ${status} Battery Charge: ${bcharge}% Time Left: ${timeleft}"
   fi
 
-  curl -sd "type=${TYPE}&id=${ID}&key=${KEY}&ttl=${TTL}&uid=${UIDD}&uids=${UIDS}&title=${RTITLE}&text=${RTEXT}" https://pushall.ru/api.php
+  RUN=$(curl -sd "type=${TYPE}&id=${ID}&key=${KEY}&ttl=${TTL}&uid=${UIDD}&uids=${UIDS}&title=${RTITLE}&text=${RTEXT}" https://pushall.ru/api.php)
+  echo -e "${RUN}"
 }
 
 check() {
@@ -70,11 +72,15 @@ check() {
     # shellcheck disable=SC2002
     STATUS=$(cat "${FILE}" | awk '/^(STATUS).*:/ {print $3}')
     # shellcheck disable=SC2002
-    BCHARGE=$(cat "${FILE}" | awk '/^(BCHARGE).*:/ {print $3}')
+    BCHARGE=$(cat "${FILE}" | awk '/^(BCHARGE).*:/ {print $3}' | bc)
+    # shellcheck disable=SC2002
+    TIMELEFT=$(cat "${FILE}" | awk '/^(TIMELEFT).*:/ {$1=$2="";print $0}' | sed -e 's/^[[:space:]]*//')
   else
     UPSNAME=""
     array=("ONLINE" "ONBATT")
     BCHARGE=$(( (RANDOM % 100 )  + 1 ))
+    TIMELEFT=$(( (RANDOM % 100 )  + 1 ))
+    TIMELEFT="${TIMELEFT} Minutes"
     size="${#array[@]}"
     index=$((RANDOM % size))
     STATUS="${array[$index]}"
@@ -89,7 +95,11 @@ check() {
     if [ -z "$TEST" ]; then
       CACHE_STATUS="${STATUS}"
     fi
-    push "${STATUS}" "${BCHARGE}" "${UPSNAME}"
+    push "${STATUS}" "${BCHARGE}" "${UPSNAME}" "${TIMELEFT}"
+  else
+    if [ -n "$TEST" ]; then
+      echo "Skipped"
+    fi
   fi
 }
 
@@ -98,9 +108,14 @@ do
   check
 
   if [ -n "$TEST" ]; then
-    echo -e
     exit 0
   fi
 
-  sleep "${INTERVAL:-15}"
+  if [ "$CACHE_STATUS" = "ONBATT" ] && [ "$BATT_INTERVAL" -gt 0 ]; then
+    CACHE_STATUS=""
+    sleep "${BATT_INTERVAL:-15}"
+  else
+    sleep "${INTERVAL:-15}"
+  fi
+
 done
