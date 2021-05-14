@@ -4,38 +4,13 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 CONF="${DIR}/ups.conf"
 TEST="$1"
 CACHE_STATUS=''
-NOW=$(date)
 
-if ! which apcupsd &> /dev/null; then
-  echo "apcupsd not installed"
-  exit 1
-fi
+log() {
+  local -r type="$1"
+  shift
 
-if [ ! -f "$CONF" ]; then
-  echo "File configuration not found. Please copy ups.example.conf to ups.conf"
-  exit 1
-else
-  # shellcheck disable=SC1090
-  source "${CONF}"
-fi
-
-if [ -z "$TYPE" ] || [ -z "$ID" ] || [ -z "$KEY" ] || [ -z "$FILE" ]; then
-  echo "The config file is configured incorrectly"
-  exit 1
-fi
-
-if [ -z "$TEST" ] && [ ! -f "$FILE" ]; then
-  echo "File ${FILE} not found"
-  exit 1
-fi
-
-if [ "$TYPE" = "multicast" ] && [ -z "$UIDS" ]; then
-  echo "You are using multicast request type. UIDS must be set"
-  exit 1
-elif [ "$TYPE" = "unicast" ] && [ -z "$UIDD" ]; then
-  echo "You are using unicast request type. UIDD must be set"
-  exit 1
-fi
+  echo -e "$(date) [${type}]: $*"
+}
 
 push() {
   local -r status="$1"
@@ -57,7 +32,7 @@ push() {
   fi
 
   RUN=$(curl -sd "type=${TYPE}&id=${ID}&key=${KEY}&ttl=${TTL}&uid=${UIDD}&uids=${UIDS}&title=${RTITLE}&text=${RTEXT}" https://pushall.ru/api.php)
-  echo -e "Message sending result: ${RUN}"
+  log "INFO" "Message sending result: ${RUN}"
 }
 
 check() {
@@ -82,7 +57,7 @@ check() {
   fi
 
   if [ -z "$STATUS" ]; then
-    echo "UPS Status not found in ${FILE}"
+    log "WARNING" "UPS Status not found in ${FILE}"
     return
   fi
 
@@ -93,12 +68,43 @@ check() {
     push "${STATUS}" "${BCHARGE}" "${UPSNAME}" "${TIMELEFT}"
   else
     if [ -n "$TEST" ]; then
-      echo "Skipped"
+      log "INFO" "Skipped"
     fi
   fi
 }
 
-echo "Service started successfully ${NOW}"
+if ! which apcupsd &> /dev/null; then
+  log "ERROR" "apcupsd not installed"
+  exit 1
+fi
+
+if [ ! -f "$CONF" ]; then
+  log "ERROR" "File configuration not found. Please copy ups.example.conf to ups.conf"
+  exit 1
+else
+  # shellcheck disable=SC1090
+  source "${CONF}"
+fi
+
+if [ -z "$TYPE" ] || [ -z "$ID" ] || [ -z "$KEY" ] || [ -z "$FILE" ]; then
+  log "ERROR" "The config file is configured incorrectly"
+  exit 1
+fi
+
+if [ -z "$TEST" ] && [ ! -f "$FILE" ]; then
+  log "ERROR" "File ${FILE} not found"
+  exit 1
+fi
+
+if [ "$TYPE" = "multicast" ] && [ -z "$UIDS" ]; then
+  log "ERROR" "You are using multicast request type. UIDS must be set"
+  exit 1
+elif [ "$TYPE" = "unicast" ] && [ -z "$UIDD" ]; then
+  log "ERROR" "You are using unicast request type. UIDD must be set"
+  exit 1
+fi
+
+log "INFO" "Service started successfully"
 
 while :
 do
