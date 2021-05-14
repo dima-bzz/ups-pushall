@@ -116,7 +116,7 @@ do
 
   if [ "$CACHE_STATUS" = "ONBATT" ] && [ "$BATT_INTERVAL" -gt 0 ]; then
     CACHE_STATUS=""
-    sleep "${BATT_INTERVAL:-15}"
+    sleep "${BATT_INTERVAL}"
   else
     sleep "${INTERVAL:-15}"
   fi
